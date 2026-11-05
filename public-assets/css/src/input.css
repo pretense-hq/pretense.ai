@@ -1,0 +1,232 @@
+
+@charset "UTF-8";
+
+/*
+===============================================
+CSS Import Tailwindcss
+===============================================
+*/
+
+
+@import "tailwindcss";
+
+
+/*
+===============================================
+CSS Variables Tailwindcss
+===============================================
+*/
+
+
+@theme {
+    --color-slate-800: #09090B;  
+    --color-slate-700: #222224;  
+    --color-gray-800: #18181B;  
+    --color-gray-700: #0F0F11;  
+    --color-gray-400: #969696;  
+    --color-teal-400: #00DCDF;  
+    --color-green-400: #3BCE58;  
+    --color-lime-400: #8BE969;  
+    --color-red-400: #FF3639;  
+    --color-orange-400: #E68311;  
+    --color-blue-400: #1154E6;  
+}
+
+/*
+===============================================
+CSS Custom Font
+===============================================
+*/
+
+:root {
+  --animate-duration: 1000ms;
+  --animate-delay: 0.9s;
+}
+@font-face {
+    font-family: 'Geist';
+    src: url('../fonts/Geist-Bold.woff2') format('woff2'),
+        url('../fonts/Geist-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('../fonts/Geist-Medium.woff2') format('woff2'),
+        url('../fonts/Geist-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('../fonts/Geist-Regular.woff2') format('woff2'),
+        url('../fonts/Geist-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('../fonts/Geist-SemiBold.woff2') format('woff2'),
+        url('../fonts/Geist-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Geist Mono';
+    src: url('../fonts/GeistMono-Medium.woff2') format('woff2'),
+        url('../fonts/GeistMono-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist Mono';
+    src: url('../fonts/GeistMono-Regular.woff2') format('woff2'),
+        url('../fonts/GeistMono-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist Mono';
+    src: url('../fonts/GeistMono-SemiBold.woff2') format('woff2'),
+        url('../fonts/GeistMono-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+body{
+    font-family: 'Geist';
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 400;
+    color: var(--color-gray-400);
+}
+h1,h2,h3,h4,h5,h6{
+    line-height: 1.1;
+}
+.geistMono{
+    font-family: 'Geist Mono';
+}
+.container {
+   max-width: 1200px;
+}
+/*
+===============================================
+CSS Header
+===============================================
+*/
+.header-area.sticky{
+    position: fixed !important;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    z-index: 999;
+    background-color: var(--color-slate-800);
+}
+/*
+===============================================
+CSS Hero
+===============================================
+*/
+.section-label span {
+  box-shadow: 0px 0px 0px 4px #00dbdf42;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0px 0px 0px 0px #00dbdf00;
+  }
+  70% {
+    box-shadow: 0px 0px 0px 4px #00dbdf42;
+  }
+  100% {
+    box-shadow: 0px 0px 0px 0px #00dbdf00;
+  } 
+}
+/*
+===============================================
+CSS Faq
+===============================================
+*/
+.accordion-header{
+    display: block;
+    width: 100%;
+    text-align: left;
+    position: relative;
+    cursor: pointer;
+    padding: 24px;
+}
+.accordion-header::before{
+   content: "";
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
+   background-color: var(--color-teal-400);
+   position: absolute;
+   right: 16px;
+   top:0;
+   bottom:0;
+   margin: auto;
+   opacity: 0.2;
+}
+.accordion-header::after{
+    content: "";
+    width: 16px;
+    height: 16px;
+    background-image: url(../images/plus.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    position: absolute;
+    right: 23px;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+.active .accordion-header::after{
+    background-image: url(../images/minus.svg);
+}
+.accordion-content{
+   padding: 0 24px 24px;
+}
+.accordion-item{
+    border-bottom: 1px solid var(--color-slate-700);
+}
+/*
+===============================================
+CSS Custom Font
+===============================================
+*/
+
+/*
+===============================================
+CSS Footer
+===============================================
+*/
+.scroll-top {
+    display: none;
+    width: 56px;
+    height: 56px;
+    background-color: var(--color-slate-700);
+    color: var(--color-white);
+    border: 1px solid var(--color-gray-400);
+    border-radius: 50%;
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 9999;
+    padding: 16px 0;
+    text-align: center;
+}
+.scroll-top.show{
+    display: block;
+}

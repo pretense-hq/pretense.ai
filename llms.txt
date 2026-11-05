@@ -1,0 +1,46 @@
+# Pretense
+
+> Real code protection for AI coding tools. Pretense sits between source code and
+> the AI tools that read it, so secrets and personal data are swapped for
+> stand-ins before any request reaches a third-party model.
+
+## Documentation
+
+- [Quickstart](https://www.pretense.ai/docs/quickstart): Install Pretense and route your first AI tool through it, in 4 commands.
+- [How it works](https://www.pretense.ai/docs/how-it-works): Why Pretense mutates secrets rather than redacting them. Code names are restored byte-exactly in the reply. Secrets and PII stay as tokens.
+- [Configuration](https://www.pretense.ai/docs/config): 1 file and a handful of environment variables. Everything has a working default.
+- [CLI reference](https://www.pretense.ai/docs/cli): Every command the shipped binary accepts and what it returns.
+- [Air-gap](https://www.pretense.ai/docs/air-gap): Run entirely on your own hardware, with local runners and a licence gate that fails closed.
+- [Automation & CI](https://www.pretense.ai/docs/automation): Catch secrets before they are committed and again before they are merged.
+- [API & clients](https://www.pretense.ai/docs/api): Point any OpenAI- or Anthropic-compatible client at Pretense by changing 1 base URL.
+- [Code graph](https://www.pretense.ai/docs/code-graph): A local graph of the functions, classes and constants in your repo. It records each identifier on your machine. The renaming happens in the proxy.
+
+## Product
+
+- [Pricing](https://www.pretense.ai/pricing): Plans and what each tier includes.
+- [About](https://www.pretense.ai/about): About the company behind Pretense.
+- [Case studies](https://www.pretense.ai/case-studies): How teams use Pretense.
+- [Architecture](https://www.pretense.ai/architecture): System design explainers: Kafka, sharding, the CAP theorem and database indexing.
+- [FAQ](https://www.pretense.ai/faq): Common questions about the product.
+- [Security](https://www.pretense.ai/security): How Pretense protects code and data sent to AI models.
+- [Enterprise](https://www.pretense.ai/enterprise): Deployment options for larger teams.
+
+## Key facts
+
+- Pretense swaps secrets and PII out of prompts before they reach an AI model. They are never put back into the model's reply, so a model cannot echo them into a link or output.
+- Code identifiers are renamed on the way out and restored byte-exactly in the reply.
+- The CLI wraps Claude Code, Cursor, Codex, Gemini and Aider: pretense run <tool>.
+- Pretense is not SOC 2 or HIPAA certified today.
+- Plans: Free, Startup and Enterprise. Current prices are on the pricing page.
+
+## Install
+
+Install the CLI with:
+
+    curl -fsSL https://www.pretense.ai/install.sh | sh
+
+## Optional
+
+- [Contact](https://www.pretense.ai/contact): Get in touch with the team.
+- [Privacy policy](https://www.pretense.ai/privacy)
+- [Terms of service](https://www.pretense.ai/terms)

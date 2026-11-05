@@ -1,0 +1,5 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Redirecting…</title><meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0;url=/favicon.png"><link rel="canonical" href="/favicon.png">
+<script>location.replace("/favicon.png"+location.hash)</script>
+</head><body><p>Redirecting to <a href="/favicon.png">/favicon.png</a>…</p></body></html>
