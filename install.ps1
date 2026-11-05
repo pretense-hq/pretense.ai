@@ -243,11 +243,11 @@ function Invoke-PretenseInstall {
   } else {
     $SumsText = $null
     try {
-      $SumsUrl  = "$ReleasesUrl/releases/$Version/SHA256SUMS"
+      $SumsUrl  = "$BaseUrl/releases/$Version/SHA256SUMS"
       $SumsText = (Invoke-RestMethod $SumsUrl)
     } catch {
       Remove-Item $TmpFile -Force -ErrorAction SilentlyContinue
-      throw "Could not fetch SHA256SUMS from $ReleasesUrl/releases/$Version/SHA256SUMS. Refusing to install an unverified binary. Set SKIP_CHECKSUM=1 to override."
+      throw "Could not fetch SHA256SUMS from $BaseUrl/releases/$Version/SHA256SUMS. Refusing to install an unverified binary. Set SKIP_CHECKSUM=1 to override."
     }
 
     # Reject a soft-404 before parsing: a manifest is lines of "<64 hex> <name>".

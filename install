@@ -396,7 +396,7 @@ main() {
     *)       BINARY_FILE="${REMOTE_BINARY_NAME}-${OS}-${ARCH}" ;;
   esac
   DOWNLOAD_URL="${RELEASES_URL}/releases/${VERSION}/${BINARY_FILE}"
-  CHECKSUM_URL="${RELEASES_URL}/releases/${VERSION}/SHA256SUMS"
+  CHECKSUM_URL="${BASE_URL}/releases/${VERSION}/SHA256SUMS"
 
   # Download binary
   TMP_DIR=$(mktemp -d)
