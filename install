@@ -48,6 +48,8 @@ set -e
 
 # --- Configuration -----------------------------------------------------------
 BASE_URL="https://www.pretense.ai"
+# Release binaries stay off the public Pages repo; they are served by the app origin.
+RELEASES_URL="https://app.pretense.ai"
 # Must match the published artifact filenames exactly or every download 404s.
 # As of v0.6.1 the release workflow emits `pretense-*`; older 0.4.x artifacts
 # were named `pretest-*` and have been removed.
@@ -393,8 +395,8 @@ main() {
     windows) BINARY_FILE="${REMOTE_BINARY_NAME}-win-${ARCH}.exe" ;;
     *)       BINARY_FILE="${REMOTE_BINARY_NAME}-${OS}-${ARCH}" ;;
   esac
-  DOWNLOAD_URL="${BASE_URL}/releases/${VERSION}/${BINARY_FILE}"
-  CHECKSUM_URL="${BASE_URL}/releases/${VERSION}/SHA256SUMS"
+  DOWNLOAD_URL="${RELEASES_URL}/releases/${VERSION}/${BINARY_FILE}"
+  CHECKSUM_URL="${RELEASES_URL}/releases/${VERSION}/SHA256SUMS"
 
   # Download binary
   TMP_DIR=$(mktemp -d)

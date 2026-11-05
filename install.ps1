@@ -183,6 +183,7 @@ function Assert-PretenseNoDowngrade {
 
 function Invoke-PretenseInstall {
   $BaseUrl    = "https://www.pretense.ai"
+  $ReleasesUrl = "https://app.pretense.ai"  # binaries are served by the app origin, not the public Pages repo
   # Must match the published artifact filename exactly or the download 404s.
   # As of v0.6.1 the release workflow emits pretense-*; older 0.4.x artifacts
   # were named pretest-* and have been removed.
@@ -213,7 +214,7 @@ function Invoke-PretenseInstall {
 
   # Download binary
   $FileName   = $RemoteBinaryName
-  $DownloadUrl = "$BaseUrl/releases/$Version/$FileName"
+  $DownloadUrl = "$ReleasesUrl/releases/$Version/$FileName"
   $TmpFile    = [System.IO.Path]::GetTempFileName() + ".exe"
 
   Write-Host "  -> Downloading $FileName $Version..."
@@ -242,11 +243,11 @@ function Invoke-PretenseInstall {
   } else {
     $SumsText = $null
     try {
-      $SumsUrl  = "$BaseUrl/releases/$Version/SHA256SUMS"
+      $SumsUrl  = "$ReleasesUrl/releases/$Version/SHA256SUMS"
       $SumsText = (Invoke-RestMethod $SumsUrl)
     } catch {
       Remove-Item $TmpFile -Force -ErrorAction SilentlyContinue
-      throw "Could not fetch SHA256SUMS from $BaseUrl/releases/$Version/SHA256SUMS. Refusing to install an unverified binary. Set SKIP_CHECKSUM=1 to override."
+      throw "Could not fetch SHA256SUMS from $ReleasesUrl/releases/$Version/SHA256SUMS. Refusing to install an unverified binary. Set SKIP_CHECKSUM=1 to override."
     }
 
     # Reject a soft-404 before parsing: a manifest is lines of "<64 hex> <name>".
