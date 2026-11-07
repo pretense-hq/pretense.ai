@@ -80,9 +80,25 @@ error()   { printf "${RED}  ✗${RESET}  %b\n" "$1" >&2; exit 1; }
 banner()  { printf "\n${BOLD}  Pretense CLI Installer${RESET}\n  AI firewall for dev teams — pretense.ai\n\n"; }
 
 # --- Detect OS ---------------------------------------------------------------
+# musl libc (Alpine, many container and CI images): our Linux binaries are built
+# against glibc and cannot run there. Refuse before downloading, with the route
+# that works (TASK-793): the npm package runs on Alpine (verified: node:22-alpine,
+# npm install -g @pretense/cli -> 0.6.79). PRETENSE_LIBC=musl|glibc overrides.
+is_musl() {
+  case "${PRETENSE_LIBC:-}" in musl) return 0 ;; glibc) return 1 ;; esac
+  ls /lib/ld-musl-* >/dev/null 2>&1 && return 0
+  ldd --version 2>&1 | grep -qi musl
+}
+
 detect_os() {
   case "$(uname -s)" in
-    Linux*)  echo "linux" ;;
+    Linux*)
+      if is_musl; then
+        error "This Linux uses musl libc (Alpine or similar). The Pretense binary needs glibc.
+  Install with npm instead (Node 18+):   npm install -g @pretense/cli
+  Or use a glibc-based image, e.g. node:22-slim or debian:bookworm-slim."
+      fi
+      echo "linux" ;;
     Darwin*) echo "darwin" ;;
     MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
     *) error "Unsupported OS: $(uname -s). Install manually: npm install -g @pretense/cli" ;;
