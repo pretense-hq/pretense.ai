@@ -54,18 +54,37 @@ function Install-PretenseViaNpm {
   $Node = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
   if (-not $Npm -or -not $Node) { return $false }
 
-  Write-Host "  -> Node + npm detected -- installing the always-latest npm package..."
+  Write-Host "  -> Node + npm detected, installing the always-latest npm package..."
 
   # '@pretense/cli' MUST stay quoted. A bare @pretense/cli is PowerShell's
   # splat operator applied to $pretense, not a string, so the package name
   # would silently become something else entirely.
+  #
+  # stdout stays quiet; stderr is kept and SHOWN when npm fails. It used to be
+  # piped to Out-Null with stdout, so a failed install printed no reason at all.
+  # ErrorActionPreference is relaxed for this call only: under "Stop", Windows
+  # PowerShell 5.1 turns the first native stderr line into a terminating error.
+  $script:PretenseNpmFailed = $true
+  $NpmOut = $null
+  $NpmExit = 1
+  $PrevEap = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
   try {
-    & $Npm.Source install -g '@pretense/cli' 2>&1 | Out-Null
+    $NpmOut = & $Npm.Source install -g '@pretense/cli' 2>&1
+    $NpmExit = $LASTEXITCODE
   } catch {
-    Write-Host "  WARN  npm install did not complete; falling back to the standalone binary."
-    return $false
+    $NpmOut = @($_)
+    $NpmExit = 1
+  } finally {
+    $ErrorActionPreference = $PrevEap
   }
-  if ($LASTEXITCODE -ne 0) {
+  if ($NpmExit -ne 0) {
+    Write-Host "  WARN  npm install -g @pretense/cli failed. npm said:"
+    foreach ($Line in @($NpmOut)) {
+      if ($Line -is [System.Management.Automation.ErrorRecord]) {
+        [Console]::Error.WriteLine("    " + $Line.ToString())
+      }
+    }
     Write-Host "  WARN  npm install did not complete; falling back to the standalone binary."
     return $false
   }
@@ -83,13 +102,33 @@ function Install-PretenseViaNpm {
     return $false
   }
 
+  $script:PretenseNpmFailed = $false
   Write-Host "  OK  Installed @pretense/cli $Installed via npm"
-  Write-Host ""
-  Write-Host "  Quick start:"
-  Write-Host "    `$env:ANTHROPIC_BASE_URL = 'http://localhost:9339'"
-  Write-Host "    pretense start --verbose"
-  Write-Host ""
+  Write-PretenseQuickStart
   return $true
+}
+
+# --- Next steps ----------------------------------------------------------------
+# The three commands a new user runs next, printed as the LAST lines of every
+# successful install (npm and binary paths alike). Mirrors install.sh.
+# `start --install` first shipped in 0.6.89; a binary below the floor does not
+# have it, so that install prints plain `start`.
+function Write-PretenseQuickStart {
+  param([bool]$OldBinary = $false)
+  Write-Host ""
+  if ($OldBinary) {
+    Write-Host "  For the always-on version (start --install), run: npm i -g @pretense/cli"
+    Write-Host ""
+  }
+  Write-Host "  Quick start:"
+  Write-Host "    pretense login"
+  if ($OldBinary) {
+    Write-Host "    pretense start"
+  } else {
+    Write-Host "    pretense start --install"
+  }
+  Write-Host "    pretense status"
+  Write-Host ""
 }
 
 # --- Downgrade guard ---------------------------------------------------------
@@ -181,6 +220,35 @@ function Assert-PretenseNoDowngrade {
   }
 }
 
+# --- Binary channel floor --------------------------------------------------------
+# The standalone binary is published separately from npm and can lag it: on
+# 2026-11-13 releases/latest/version.txt said 0.6.79 while npm latest was
+# 0.6.89. Below this floor the binary is never installed silently:
+#   * Node present and not forced to binary: refuse the binary and point at npm.
+#   * No Node (or PRETENSE_INSTALL_METHOD=binary): say plainly that the binary
+#     is older and how to get Node, then continue.
+# The downgrade guard and checksum verification still apply either way.
+# Returns $true when the offered binary is below the floor (and was allowed).
+function Test-PretenseBinaryFloor {
+  param([string]$Offered, [string]$MinVersion)
+  if (-not (Test-PretenseVersionNewer $MinVersion $Offered)) { return $false }
+  $Node = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($env:PRETENSE_INSTALL_METHOD -ne "binary" -and $Node) {
+    $Why = if ($script:PretenseNpmFailed) { "npm install failed (see npm's output above)." } else { "npm was not found next to node." }
+    throw (
+      "The standalone binary ($Offered) is older than $MinVersion, and $Why`n" +
+      "  Node is installed, so install the current release with npm:`n" +
+      "    npm install -g @pretense/cli`n" +
+      "  To install the older $Offered binary anyway:  set PRETENSE_INSTALL_METHOD=binary"
+    )
+  }
+  Write-Host "  WARN  The standalone binary is $Offered, older than $MinVersion (the current release is on npm)."
+  Write-Host "  WARN  For the current release, install Node.js 18+ (https://nodejs.org/en/download),"
+  Write-Host "  WARN  then run:  npm install -g @pretense/cli"
+  Write-Host "  WARN  Continuing with the $Offered binary."
+  return $true
+}
+
 function Invoke-PretenseInstall {
   $BaseUrl    = "https://www.pretense.ai"
   $ReleasesUrl = "https://app.pretense.ai"  # binaries are served by the app origin, not the public Pages repo
@@ -211,6 +279,10 @@ function Invoke-PretenseInstall {
   # Checked here, not next to the Copy-Item, so a refused downgrade costs no
   # bandwidth and cannot leave a half-installed state behind.
   Assert-PretenseNoDowngrade $Version $InstallDir $BinaryName $BaseUrl
+
+  # Never install a binary below the floor without saying so.
+  $MinBinaryVersion = "0.6.89"
+  $OldBinary = Test-PretenseBinaryFloor $Version $MinBinaryVersion
 
   # Download binary
   $FileName   = $RemoteBinaryName
@@ -312,11 +384,11 @@ function Invoke-PretenseInstall {
   Write-Host ""
   Write-Host "  Installation complete ($InstalledVersion)"
 
-  Write-Host ""
-  Write-Host "  Quick start:"
-  Write-Host "    `$env:ANTHROPIC_BASE_URL = 'http://localhost:9339'"
-  Write-Host "    pretense start --verbose"
-  Write-Host ""
+  if ($OldBinary) {
+    Write-Host "  WARN  Installed $Version, older than $MinBinaryVersion. Install Node.js, then: npm install -g @pretense/cli"
+  }
+
+  Write-PretenseQuickStart -OldBinary $OldBinary
 }
 
 # -----------------------------------------------------------------------------

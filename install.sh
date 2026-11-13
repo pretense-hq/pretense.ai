@@ -202,17 +202,78 @@ try_npm_install() {
   [ "${PRETENSE_INSTALL_METHOD:-}" = "binary" ] && return 1
   command -v npm >/dev/null 2>&1 || return 1
   command -v node >/dev/null 2>&1 || return 1
-  info "Node + npm detected — installing the always-latest npm package..."
-  if npm install -g @pretense/cli >/dev/null 2>&1; then
+  info "Node + npm detected, installing the always-latest npm package..."
+  # stdout stays quiet; stderr is captured and SHOWN when npm fails. It used to
+  # go to /dev/null too, so a failed install (EACCES on a root-owned prefix, a
+  # proxy, an old Node) printed only "did not complete" with no reason at all.
+  _npm_err=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/pretense-npm-err.$$")
+  if npm install -g @pretense/cli >/dev/null 2>"$_npm_err"; then
+    rm -f "$_npm_err"
     installed=$(pretense --version 2>/dev/null || echo "")
     if [ -n "$installed" ]; then
       success "Installed @pretense/cli ${installed} via npm"
-      printf "\n${BOLD}  Quick start:${RESET}\n    ${BINARY_NAME} run claude\n\n"
+      quick_start
       return 0
     fi
+    warn "The npm package installed, but the pretense command did not answer --version."
+    warn "Check that npm's global bin directory is on your PATH:  npm prefix -g"
+  else
+    warn "npm install -g @pretense/cli failed. npm said:"
+    sed 's/^/    /' "$_npm_err" >&2 || true
+    rm -f "$_npm_err"
   fi
+  NPM_FAILED=1
   warn "npm install did not complete; falling back to the standalone binary."
   return 1
+}
+
+# --- Next steps ----------------------------------------------------------------
+# The three commands a new user runs next, printed as the LAST lines of every
+# successful install (npm and binary paths alike). Pinned by
+# tests/install-quick-start.test.mjs.
+# `start --install` first shipped in 0.6.89. A binary below MIN_BINARY_VERSION
+# (OLD_BINARY=1) does not have it, so that install prints plain `start`.
+quick_start() {
+  if [ "${OLD_BINARY:-0}" = "1" ]; then
+    printf "\n  For the always-on version (start --install), run: npm i -g @pretense/cli\n"
+  fi
+  printf "\n${BOLD}  Quick start:${RESET}\n"
+  printf "    %s login\n" "$BINARY_NAME"
+  if [ "${OLD_BINARY:-0}" = "1" ]; then
+    printf "    %s start\n" "$BINARY_NAME"
+  else
+    printf "    %s start --install\n" "$BINARY_NAME"
+  fi
+  printf "    %s status\n\n" "$BINARY_NAME"
+}
+
+# --- Binary channel floor --------------------------------------------------------
+# The standalone binary is published separately from npm and can lag it: on
+# 2026-11-13 ${BASE_URL}/releases/latest/version.txt said 0.6.79 while npm
+# latest was 0.6.89. Below this floor the binary is never installed silently:
+#   * Node present and not forced to binary: refuse the binary and point at npm.
+#   * No Node (or PRETENSE_INSTALL_METHOD=binary): say plainly that the binary
+#     is older and how to get Node, then continue.
+# The downgrade guard and checksum verification below still apply either way.
+MIN_BINARY_VERSION="0.6.89"   # first release that ships `start --install`
+NPM_FAILED=0
+
+check_binary_floor() {
+  _offered="$1"
+  version_gt "$MIN_BINARY_VERSION" "$_offered" || return 0
+  if [ "${PRETENSE_INSTALL_METHOD:-}" != "binary" ] && command -v node >/dev/null 2>&1; then
+    if [ "$NPM_FAILED" = "1" ]; then
+      _why="npm install failed (see npm's output above)."
+    else
+      _why="npm was not found next to node."
+    fi
+    error "The standalone binary (${_offered}) is older than ${MIN_BINARY_VERSION}, and ${_why}\n  Node is installed, so install the current release with npm:\n    npm install -g @pretense/cli\n  To install the older ${_offered} binary anyway:  PRETENSE_INSTALL_METHOD=binary"
+  fi
+  OLD_BINARY=1
+  warn "The standalone binary is ${_offered}, older than ${MIN_BINARY_VERSION} (the current release is on npm)."
+  warn "For the current release, install Node.js 18+ (https://nodejs.org/en/download),"
+  warn "then run:  npm install -g @pretense/cli"
+  warn "Continuing with the ${_offered} binary."
 }
 
 # --- Downgrade guard ---------------------------------------------------------
@@ -394,6 +455,10 @@ main() {
   # and cannot leave a half-installed state behind.
   check_downgrade "$VERSION"
 
+  # Never install a binary below MIN_BINARY_VERSION without saying so.
+  OLD_BINARY=0
+  check_binary_floor "$VERSION"
+
   # Build download URLs
   #
   # ── ONE MAPPING, MIRRORING scripts/build-binaries.sh TARGETS (TASK-737) ──────
@@ -509,9 +574,11 @@ main() {
     info "Restart your terminal or run: export PATH=\"${INSTALL_DIR}:\$PATH\""
   fi
 
-  printf "\n${BOLD}  Quick start:${RESET}\n"
-  printf "    export ANTHROPIC_BASE_URL=http://localhost:9339\n"
-  printf "    ${BINARY_NAME} start --verbose\n\n"
+  if [ "$OLD_BINARY" = "1" ]; then
+    warn "Installed ${VERSION}, older than ${MIN_BINARY_VERSION}. Install Node.js, then: npm install -g @pretense/cli"
+  fi
+
+  quick_start
 }
 
 # -----------------------------------------------------------------------------
