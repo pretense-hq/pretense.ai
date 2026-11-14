@@ -1,0 +1,655 @@
+# Pretense: full documentation
+
+> The text of every page under https://www.pretense.ai/docs, generated from the rendered pages. Index: https://www.pretense.ai/llms.txt
+
+---
+
+# Quickstart
+
+URL: https://www.pretense.ai/docs/quickstart
+
+## Quickstart
+
+Install Pretense and route your first AI tool through it, in 4 commands.
+
+### 4 commands
+
+npm i -g @pretense/cli@stable
+pretense --version
+pretense login --key YOUR_KEY
+pretense run claude
+
+Command 2 is the cheapest possible check that the install worked. Command 3 takes a key from dashboard, settings, API keys. That is the entire setup: no config file to write, no proxy to start.
+
+Then two ways to see what Pretense would protect, before anything runs:
+
+pretense scan .      # what would leave this directory
+pretense review .    # the same, with the surrounding code
+
+### Hosted or air-gapped: one argument apart
+
+There is no second setup for running on your own hardware. It is the same four commands, and the only thing that changes is the argument to command 4.
+
+npm i -g @pretense/cli@stable
+pretense --version
+pretense login --key YOUR_KEY
+pretense run qwen2.5-coder
+
+claude names a tool, so Pretense starts the proxy and launches that tool against it. qwen2.5-coder names a model, so Pretense starts the same proxy and talks to the model through it directly: a chat prompt, no extra client to install. Either way the prompt is mutated on the way out and only its code names are restored on the way back. Secrets and PII are never put back into the reply, and the exchange lands in the audit log. Air-gap covers the local half in full.
+
+The hosted path needs the tool installed as wellpretense run claude spawns claude, so that binary has to be on your PATH already; without it the command reports "claude" is not on your PATH and exits. Count that as a fifth step for the hosted path. The local path really is four: the model chat is built into the CLI, so there is nothing else to install.
+
+Change the last word and Pretense works out the provider. These are the names it already knows.
+
+##### Hosted
+
+Command | Tool | Base URL set for you | Reads your files?
+pretense run claude | Claude Code | ANTHROPIC_BASE_URL | yes (agent)
+pretense run cursor | Cursor | OPENAI_BASE_URL | yes (agent)
+pretense run codex | Codex CLI | OPENAI_BASE_URL | yes (agent)
+pretense run gemini | Gemini CLI | GEMINI_BASE_URL | yes (agent)
+pretense run aider | Aider | OPENAI_BASE_URL | yes (agent)
+pretense run continue | Continue | OPENAI_BASE_URL | yes (agent)
+pretense run goose | Goose | OPENAI_BASE_URL | yes (agent)
+pretense run llm | llm CLI | OPENAI_BASE_URL | prompt in, text out
+
+##### On your machine
+
+Command | Model or runner | Reads your files?
+pretense run llama3.2 | Llama | chat only
+pretense run mistral | Mistral | chat only
+pretense run gemma3 | Gemma | chat only
+pretense run qwen2.5-coder | Qwen | chat only
+pretense run deepseek-r1 | DeepSeek | chat only
+pretense run ollama | Ollama | chat only
+pretense run lmstudio | LM Studio | chat only
+pretense run vllm | vLLM | chat only
+
+Pull the model locally first.
+
+The local path is a chat, and an agent reads your repositoryEvery row in the second table reaches the same built-in chat: it takes a prompt and returns text. Ask it to open a file and it will answer from the prompt alone, because it has no filesystem to reach for. That is worth knowing before you ask one to summarise a repository.
+
+Reading files is a property of the client, and it is available with local weights too. Point an agent at a local model and you get both:
+
+unset ANTHROPIC_API_KEY
+OPENAI_API_KEY=local pretense run aider -- \
+  --model openai/qwen2.5-coder:latest --read src/api.ts
+
+--model takes a flag. Passed bare, aider reads the value as a filename and creates an empty file of that name. And clear ANTHROPIC_API_KEY first: aider prefers its default Anthropic model whenever that key is present.
+
+##### Which client, which model
+
+The two questions vary independently. What the client can do is one axis; where the model runs is the other.
+
+Client | Hosted model | Model on your machine
+Agent: reads your files | pretense run claude · aider · codex · gemini | pretense run aider --model openai/qwen2.5-coder
+Chat: prompt in, text out | pretense run llm | pretense run qwen2.5-coder · ollama
+
+Using another provider?Name the provider: --provider openai. Takes anthropic, openai or google. An unknown name falls back to anthropic.
+
+### What just happened
+
+Command 3 authenticated you and installed your Enterprise licence. The licence arrives with your login, ready to use. A disconnected machine imports one instead: Air-gap.
+
+Authenticated successfully.  Key: prt****...98b5
+Enterprise licence installed.  ~/.pretense/licence.jwt
+
+scan and review listed what Pretense protects here, before anything leaves. Both exit 1 on a finding, so either can gate a commit.
+
+What gets readEvery file the scanner can read as text, whatever its extension. Binaries and files over 5 MB are skipped, and the count of what was skipped is printed rather than hidden. If nothing could be read at all, scan exits 3, so a clean result always means a real scan. Details in the CLI reference.
+
+Command 4 started the proxy, pointed the tool at it, and stopped it when you quit.
+
+✓ Started Pretense proxy on port 9340.
+→ Routing claude through the proxy (ANTHROPIC_BASE_URL=http://localhost:9340).
+
+Pretense starts the proxy for yourun starts one and stops the one it started. The default port is 9339; it was busy on the machine that produced this output, so Pretense moved up to 9340 and pointed the tool there. The port takes care of itself: run sets the base URL for you. Setting it yourself is Configuration.
+
+### Next
+
+- How it works: why mutation, and how the round trip stays byte-exact
+- Air-gap: keep the model on your own hardware
+- Automation & CI: catch secrets before they are committed
+
+Prefer a Node-free install? Use this instead.
+
+curl -fsSL https://www.pretense.ai/install.sh | sh
+
+To move to a newer version, run the install command again.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# AI coding tools
+
+URL: https://www.pretense.ai/docs/ai-tools
+
+## AI coding tools
+
+Send Claude Code, Gemini CLI and Codex through Pretense in 4 commands. Secrets and PII leave as stand-in tokens. Your code comes back as you wrote it.
+
+### How do I use Pretense with Claude Code, Gemini CLI and Codex?
+
+Install Pretense, sign in, and start the always-on proxy. Your AI command-line tools then send every prompt through Pretense on your machine. Secrets and PII leave as stand-in tokens, and your code comes back exactly as you wrote it.
+
+### 4 commands
+
+npm i -g @pretense/cli
+pretense login
+pretense start --install
+pretense status
+
+To install without npm, run curl -fsSL https://www.pretense.ai/install.sh | sh.
+
+- Install. Use npm (Node 18 or later) or the curl installer.
+- Sign in. pretense login opens the sign-in page. To sign in from a script, use pretense login --api-key <key>.
+- Start. pretense start --install keeps the proxy running at login and points your shell at it. Open a new terminal afterwards.
+- Check. pretense status confirms the proxy is running and shows which tools are routed.
+
+### Which tools are covered
+
+Tool | Setting it reads | Verified
+Claude Code (API key) | ANTHROPIC_BASE_URL | Yes, tested Nov 13 on 0.6.89
+OpenAI-compatible CLIs and SDKs (API key) | OPENAI_BASE_URL | Yes, tested Nov 13 on 0.6.89
+Gemini CLI and Google Gen AI SDK (API key) | GOOGLE_GEMINI_BASE_URL | Yes, tested Nov 13 on 0.6.89
+Local models (Ollama, LM Studio, vLLM) | pretense run ollama <model> | Yes, tested Nov 13 on 0.6.89
+Cursor built-in models, Claude desktop, Codex with ChatGPT sign-in, Gemini with Google sign-in | n/a | Testing in progress
+
+### What leaves your machine
+
+- Secrets and PII: Pretense mutates them into stand-in tokens before the request goes out. They stay tokens in the reply, by design.
+- Code identifiers: they are swapped on the way out and come back byte-exact in code. An identifier the model writes into prose or a comment can stay as a stand-in.
+- The rest of the prompt: it goes to the provider you chose.
+- Usage counts: they go to your Pretense dashboard.
+
+### Uninstall
+
+Run curl -fsSL https://www.pretense.ai/uninstall.sh | sh. The script prints each step, removes only what Pretense installed and exits with an error code if a step fails. To do it by hand, run these 3 commands in order.
+
+pretense start --uninstall
+pretense start --shell-setup --remove
+npm rm -g @pretense/cli
+
+The curl installer places pretense in ~/.local/bin. After the 3 commands, delete ~/.local/bin/pretense to finish.
+
+### FAQ
+
+#### Do I still need pretense run claude?
+
+Only for a single session without the always-on proxy. After pretense start --install, run claude as usual.
+
+#### Does Pretense install a root certificate?
+
+No. Pretense is a local proxy your tools reach through a base URL, and it never intercepts TLS.
+
+#### How do I undo it?
+
+Run pretense start --uninstall, then pretense start --shell-setup --remove, then npm rm -g @pretense/cli.
+
+Last validated Nov 13, 2026 on CLI 0.6.89.
+
+### Next steps
+
+- QuickstartInstall Pretense and route your first AI tool through it, in 4 commands.
+- CLI referenceEvery command the shipped binary accepts and what it returns.
+- Watch the demoThe product demo on YouTube.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# How it works
+
+URL: https://www.pretense.ai/docs/how-it-works
+
+## How it works
+
+Why Pretense mutates secrets rather than redacting them. Code names are restored byte-exactly in the reply. Secrets and PII stay as tokens.
+
+### Mutation over redaction
+
+Redaction destroys. A redacted secret is gone for good, so the model sees a hole where your code was and the answer degrades with it.
+
+Pretense swaps each secret and PII value for a deterministic synthetic before the request leaves your machine, and renames the code names inside fenced code blocks the same way. What reaches the provider is the synthetic. On the way back the code names are restored byte for byte, so what reaches you reads as your own code. Secrets and PII are never put back into the reply: they stay synthetics, because a reply that echoed one could carry your real key into a link an attacker chose.
+
+your code   ──▶  mutate  ──▶  provider sees synthetics
+                   │
+                   ▼
+             reversal map (stays on your machine)
+                   │
+your result ◀──  reverse  ◀──  provider response
+
+### The round trip
+
+Reversal is byte-exact; anything less is a bug. The proxy runs it for you: it mutates every request on the way out and restores your code names on the way back, so the round trip happens on each call. Secret and PII synthetics are never put back.
+
+pretense run claude
+
+pretense audit --limit 20
+
+The audit log records what was swapped, request by request, so you can confirm the outbound side rather than take it on trust.
+
+The same engine runs over a single file through mutate and reverse. Both take flags that decide where the file and its map are written, and those are in the CLI reference.
+
+### What gets mutated
+
+Kind | Example | Action
+API keys and tokens | sk-…, AKIA…, ghp_… | Swapped, stays a token in the reply
+PII | SSN, email | Swapped, stays a token in the reply
+Identifiers | variables, functions, classes | Renamed in fenced code, restored in the reply
+Comments and strings | // comments, string literals | Preserved verbatim
+
+Through the proxy, Pretense swaps secret and PII values and also renames the function, class and variable names inside fenced code blocks, so the provider sees neither your credentials nor your real symbol names. Each name gets the same synthetic everywhere in the request, which keeps the structure of your code intact for the model. Text outside a fence keeps its names as written; only its secret and PII values are swapped.
+
+Two paths keep names as written by design. A local runner you declare under air-gap sees real names, because the default air-gap policy, secrets-pii-only, skips the rename for that runner alone. The file-level mutate command swaps secret values only. What init records is a code graph of those names, not a rename of them.
+
+### Where the map lives
+
+The way back is a reversal map, encrypted with AES-256-GCM and written owner-only into ~/.pretense/maps/. It is not part of the request, so it is not something the provider receives.
+
+Persisted bytes, persisted mapMutating a file in place writes that file's map and prints the exact command that restores it, so the way back exists before you need it. Every mutation is reversible by design; anything less is a bug.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# Configuration
+
+URL: https://www.pretense.ai/docs/config
+
+## Configuration
+
+1 file and a handful of environment variables. Everything has a working default.
+
+### pretense.yaml
+
+1 file, written for you. Everything in it has a working default, so an empty repository needs no edits at all.
+
+pretense init
+
+scan:
+  secrets: block       # block | redact | warn | off
+  pii: redact
+  proprietary: mutate
+
+proxy:
+  port: 9339
+
+blockMode: mutate      # mutate (tokenize + forward — the always-mutate default) | reject (fail-closed: HTTP 400, never forward) | redact (alias of mutate)
+
+ignore:
+  - "*.test.ts"
+  - "*.spec.ts"
+  - "node_modules/**"
+  - "dist/**"
+  - ".git/**"
+  - ".next/**"
+
+customPatterns: []
+verbose: false
+
+scan sets what each class of finding does. proxy.port is the port the proxy prefers. ignore is glob-matched against paths. Under the default proprietary: mutate, code identifiers are renamed on the way out and restored byte-exactly in the reply.
+
+redact is a swap, not a deletionAt egress a redact action is a swap, like mutate: the value is replaced with a synthetic stand-in. Unlike a renamed identifier, a secret or PII stand-in is never swapped back into the reply. The name is historical. Nothing is deleted, and the plaintext is never forwarded. reject is the one that refuses instead, failing closed with an HTTP 400.
+
+Running your own local models adds an airgap block here. Its runners are on the Air-gap page.
+
+### Environment
+
+Set on the command that needs it. Each one overrides the file.
+
+Variable | Default | What it does
+PRETENSE_PROXY_HOST | 127.0.0.1 | Interface the proxy binds
+PRETENSE_API_KEY | None | Your key, instead of a stored login
+PRETENSE_LICENCE_PATH | ~/.pretense/licence.jwt | Where the licence is read from
+ANTHROPIC_BASE_URL | None | Point an Anthropic client at the proxy
+OPENAI_BASE_URL | None | Same, for OpenAI-compatible clients
+GEMINI_BASE_URL | None | Same, for Gemini
+
+The proxy binds loopback, so it answers this machine and nothing else on the network. Change PRETENSE_PROXY_HOST only when another host genuinely has to reach it, and only on a network you trust.
+
+To read back what is actually in force rather than what you think you set, run pretense config list.
+
+Read this before upgradingIf ~/.pretense/audit.db was written by an older CLI, pretense start exits on launch with table audit_log has no column named detector_kinds. There is no schema migration for that column yet. Move the file aside and the proxy starts again, at the cost of the local history it held.
+
+### Policies
+
+A policy re-weights severity for a compliance framework. Detection stays on.
+
+pretense policy list
+
+pretense init --policy hipaa
+
+The presets are hipaa, gdpr, soc2, nist and pci. Seeding one writes scan.compliancePreset into the file above; passing --policy to a scan overrides it for that run.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# CLI reference
+
+URL: https://www.pretense.ai/docs/cli
+
+## CLI reference
+
+Every command the shipped binary accepts and what it returns.
+
+### Commands
+
+Some take a path, a few a subcommand of their own.
+
+pretense scan .
+pretense scan ci
+
+#### Set up
+
+Command | What it does
+init | Scan the codebase and write pretense.yaml
+quickstart | init, git hooks and next steps in one go
+login | Authenticate. Takes --key, or opens a browser
+logout | Remove stored credentials
+auth | login, logout, status, and licence for air-gap
+install | Install the pre-commit and pre-push git hooks
+ignore | Add patterns to .pretenseignore
+config | list, get and set configuration values
+
+#### Every day
+
+Command | What it does
+scan | Scan a file, a directory or a git range
+review | Show the mutations that would be applied
+mutate | Swap the secrets in 1 file for synthetics
+reverse | Restore a mutated file from its map
+
+#### The proxy
+
+Command | What it does
+run | Run an AI tool through the proxy. Alias: with
+start | Start the proxy
+stop | Shut down the running proxy
+status | Whether it is running, and on which port
+
+You rarely start the proxy by hand. run starts one, points the tool at it, and stops the one it started.
+
+#### Records and plan
+
+Command | What it does
+audit | Recent mutation entries, filterable by framework
+logs | Recent audit log entries
+usage | Plan usage against limits for the period
+credits | Remaining mutation budget. Alias: tokens
+policy | List and inspect compliance frameworks
+completion | Print the tab-completion script for a shell
+version | Print the version. Same as --version
+upgrade | Compare plans and change your subscription
+
+There is no self-update commandupgrade is about your subscription, not your binary. To move to a newer version, run the install command from the Quickstart again.
+
+### Flags
+
+Flags belong to the command they follow. These are the ones you will reach for.
+
+Flag | On | What it does
+--json | scan, review, audit, logs, status, usage, credits | Machine-readable output
+--policy <preset> | scan, init | Apply a compliance preset
+--severity <lvl> | scan | Minimum severity to report
+-l, --limit <n> | audit, logs | How many entries to show
+-p, --port <port> | start, run | Preferred port. Default 9339
+--provider <name> | run | Force anthropic, openai or google
+
+#### Mutating a single file
+
+-i writes the result back to the file instead of printing it. --map <path> chooses where the reversal map is written, and where reverse reads it from.
+
+pretense mutate -i src/config.ts
+pretense reverse src/config.ts -i --map ~/.pretense/maps/<hash>.json
+
+mutate prints the second line for you, with the real path filled in.
+
+Keep the mapWith no --map given, an in-place mutation writes one into ~/.pretense/maps/ and prints the exact command that restores the file. reverse asks for that map and will not run without it, which is what stops a mutated file becoming an unrecoverable one. See How it works.
+
+### Exit codes
+
+The 2 scanning forms report findings with different codes. A gate that checks for the wrong one passes while secrets sit in the diff.
+
+Command | Clean | Findings
+scan | 0 | 1
+scan ci | 0 | 2
+
+Gate on the first. scan ci reads only what git tracks, so it exits 0 with an untracked secret still on disk. Automation has the detail.
+
+### Known limits
+
+- mutate takes a file, not a directory.
+- A directory scan skips .md files. Naming one directly does scan it, so a secret pasted into a README passes a repository scan and fails a scan of that file.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# Air-gap
+
+URL: https://www.pretense.ai/docs/air-gap
+
+## Air-gap
+
+Run entirely on your own hardware, with local runners and a licence gate that fails closed.
+
+### The same four commands
+
+Air-gap is not a separate installation, a separate binary or a separate mode you switch on. It is the Quickstart's four commands with a different argument to the last one.
+
+npm i -g @pretense/cli@stable
+pretense --version
+pretense login --key YOUR_KEY
+pretense run qwen2.5-coder
+
+Name a tool, such as claude, and Pretense starts the proxy and launches that tool against it. Name a model, such as qwen2.5-coder, and Pretense starts the same proxy and chats with the model through it. One argument decides whether your prompt reaches a hosted provider or stays on the machine, and nothing else about the sequence changes.
+
+Command 3 still needs a network, because it fetches your licence. A permanently offline machine imports the licence instead; that is the only step that differs, and it is below.
+
+Air-gapped at runtime; install and sign-in use the networkThis page means your prompts and code stay on the machine: inference happens on a runner you control, on loopback. It does not mean the CLI never opens a socket. Installing it uses the network, pretense login uses the network, and usage counts are reported unless you turn them off, including for a request that was refused. Set PRETENSE_USAGE_REPORT=off to turn that off. For a machine with no route out at all, see the import step below.
+
+### The licence gate
+
+Air-gap is an Enterprise capability and it fails closed. Without a valid licence every request is refused with 403 pretense_enterprise_required. That is correct behaviour, not a fault.
+
+pretense login --key installs the licence for you. See the Quickstart.
+
+Fully disconnected machineExport the licence where there is a network and carry the file across: pretense auth licence --import licence.jwt.
+
+The proxy boots and prints its air-gap banner with or without a licence installed, so the first request, over the banner, is the proof that air-gap is working.
+
+### Routing
+
+Nothing to configure for the common case, on a current CLI. If a runner is listening on loopback, Pretense finds it: it probes Ollama, vLLM, LM Studio and llama.cpp on their usual ports, routes the model to whichever one actually serves it, and refuses if none does.
+
+ollama pull qwen2.5-coder
+pretense run qwen2.5-coder
+
+Needs 0.6.59 or newer: check before you rely on itZero-config discovery is the paragraph above; the fail-closed half of it is what the version gate is about. On 0.6.58, which is what npm i -g @pretense/cli@stable installs today, a model that no local runner serves does not get refused: with no pretense.yaml present the request is forwarded to a hosted provider instead. Run pretense --version and read the number.
+
+Before 0.6.59, rely on explicit runners for isolation. Declare the runners explicitly and set airgap.enabled: true, as in the block below. That configuration fails closed on 0.6.58, refusing with 403 pretense_enterprise_required or pretense_no_local_runner rather than reaching out. It is the safe configuration on every version, which is why it is documented here rather than retired.
+
+Declare runners explicitly when the default is not enough: a runner on a non-standard port, a GPU box on your own network, or several runners you want to route between. See Configuration.
+
+airgap:
+  enabled: true
+  runners:
+    - name: local-ollama
+      baseUrl: http://127.0.0.1:11434
+      models: ["llama*", "qwen*", "deepseek*"]
+
+baseUrl points at the runner's OpenAI-compatible surface. Ollama, LM Studio, vLLM and LocalAI all serve one, on the same host and port as their own API.
+
+Routing is then by model name. Each glob compiles to an anchored, case-insensitive regex, so the glob has to be a prefix of the tag.
+
+Model tag | Matched by | Reaches your runner
+llama3.3:70b | llama* | yes
+qwen2.5-coder | qwen* | yes
+codellama | no default glob | needs an entry
+qwq | no default glob | needs an entry
+
+Omit models: and every local family is matched: llama*, codellama*, mistral*, mixtral*, codestral*, gemma*, codegemma*, qwen*, qwq*, deepseek* and phi*, old tags and new. A family must be followed by a version character, so mistralai and llamaindex are not claimed.
+
+An explicit list replaces the defaultsIt does not extend them. Adding ["codellama*"] stops routing llama3.2. Spell out every family you use.
+
+Once airgap.enabled is set, a model that matches nothing is refused with pretense_no_local_runner. There is no fall-back to a hosted provider, and a typo in baseUrl is a hard stop rather than quiet cloud egress. That is the guarantee worth having, and it is the one the explicit block above buys you on every shipped version.
+
+### Verify isolation
+
+Trust the audit log over the setting.
+
+pretense start
+
+curl -s http://localhost:9339/v1/chat/completions \
+  -H 'content-type: application/json' \
+  -d '{"model":"llama3.2","messages":[{"role":"user","content":"hi"}]}'
+
+pretense audit --limit 20 --json
+
+The model tag in the request is what decides where it goes, so the command is the same online and air-gapped. While traffic stays on your runner, every row's provider reads openai-compatible. A row naming anthropic, openai or google went to a hosted provider.
+
+Confirm it at the network layer as well, with tcpdump or a firewall deny rule. A proxy that has been tampered with is not a trustworthy witness to its own egress.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# Automation & CI
+
+URL: https://www.pretense.ai/docs/automation
+
+## Automation & CI
+
+Catch secrets before they are committed and again before they are merged.
+
+### Git hooks
+
+The commit is the last place a secret is cheap to remove. Pretense writes the hooks for you.
+
+pretense install
+
+That writes a pre-commit and a pre-push hook. If you already manage your own, add the line instead.
+
+# .husky/pre-commit
+pretense scan . || exit 1
+
+The exit codes this gate acts on are in the CLI reference.
+
+### CI
+
+A hook is optional for a developer. The pipeline runs every time.
+
+- name: Pretense
+  run:
+    npm i -g @pretense/cli@stable
+    pretense login --key ${{ secrets.PRETENSE_KEY }}
+    pretense scan .
+
+Those first 2 steps are the install and login from the Quickstart.
+
+Keep that last line as written (scan ci covers tracked files only)pretense scan ci only inspects git-tracked content. An untracked file is invisible to it, so in a working tree that still has one it reports nothing and exits 0 while those secrets sit on disk. pretense scan . walks the working tree and does not have that hole. The 2 forms also report findings with different exit codes, which the CLI reference lists.
+
+### Containers
+
+The same 2 lines, in the image rather than the workflow.
+
+RUN npm i -g @pretense/cli@stable
+ENV ANTHROPIC_BASE_URL=http://localhost:9339
+
+The proxy binds loopback inside the container too. The interface it binds is in Configuration. Publish the port only if another container needs to reach it.
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# API & clients
+
+URL: https://www.pretense.ai/docs/api
+
+## API & clients
+
+Point any OpenAI- or Anthropic-compatible client at Pretense by changing 1 base URL.
+
+### Clients
+
+There is no SDK to adopt and no code to rewrite. You change 1 environment variable, listed in Configuration.
+
+Client | How to point it
+Claude Code | ANTHROPIC_BASE_URL=http://localhost:9339
+Codex CLI | OPENAI_BASE_URL=http://localhost:9339/v1
+Cursor | Settings → Models → Override Base URL
+Python SDK | OpenAI(base_url="http://localhost:9339/v1")
+
+OpenAI-compatible clients take the /v1 suffix. Anthropic ones leave it off, because their SDK adds the path itself. The proxy has no per-client setting: it reads the path the client sends, so that suffix is what tells it which provider you meant. pretense run sets the right form for you.
+
+The proxy answers on loopback, so a client on another machine reaches it only once you allow it. pretense run starts one and stops it again. pretense start leaves one up for several tools to share. See Quickstart.
+
+### Health
+
+1 request tells you the proxy is up, and whether its audit log is available. Useful as a readiness check before a job points a client at it.
+
+curl -s http://localhost:9339/health
+
+{"status":"ok","version":"…","auditAvailable":true}
+
+### Next steps
+
+- ConfigurationThe variable you set, and the interface the proxy binds
+- QuickstartLet the CLI point the tool for you instead
+- Automation & CIThe same base URL, set inside an image
+
+Help us sharpen this page.Suggest an edit
+
+---
+
+# Code graph
+
+URL: https://www.pretense.ai/docs/code-graph
+
+## Code graph
+
+A local graph of the functions, classes and constants in your repo. It records each identifier on your machine. The renaming happens in the proxy.
+
+### Why a graph
+
+Scanning a file tells you what is in that file. The graph is what Pretense knows about the repository: which functions, classes and constants exist, and where. init builds it once so the later commands work from a picture of the whole tree.
+
+It is a record of your names, not a rename of them. The rename happens in the proxy, on fenced code in each request: names in your code are swapped before the provider sees them and restored in the response. See How it works.
+
+### Building it
+
+pretense init walks the repository, records every function, class and constant it finds, and writes them to .pretense/fingerprint.json.
+
+pretense init
+
+✓ Scanned 214 files
+✓ Indexed 863 functions
+✓ Indexed 114 classes
+✓ Indexed 0 constants
+✓ Created pretense.yaml
+✓ Wrote .pretense/fingerprint.json
+✓ Added .pretense/ to .gitignore
+
+The last line matters: the graph is added to your .gitignore, so it is not committed alongside the code it describes. Run pretense init again after a refactor that renames a lot of things.
+
+pretense status reports what the graph currently holds, next to your configuration and the state of the proxy.
+
+✓ Fingerprint: 214 files, 977 identifiers
+  Last scanned: 0 minutes ago
+
+### Languages
+
+Identifiers are extracted from TypeScript, JavaScript, Python, Go, Java, Kotlin, Ruby and Rust.
+
+A file in any other language is still scanned for secrets. It just contributes no identifiers to the graph. The file types scan skips are listed in the CLI reference.
+
+### Next steps
+
+- How it worksWhat the proxy swaps on the way out, and what it restores on the way back
+- CLI referenceWhat init and status accept, and what they return
+- ConfigurationThe pretense.yaml that init writes beside the graph
+
+Help us sharpen this page.Suggest an edit

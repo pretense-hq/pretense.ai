@@ -15,6 +15,7 @@
 - [Automation & CI](https://www.pretense.ai/docs/automation): Catch secrets before they are committed and again before they are merged.
 - [API & clients](https://www.pretense.ai/docs/api): Point any OpenAI- or Anthropic-compatible client at Pretense by changing 1 base URL.
 - [Code graph](https://www.pretense.ai/docs/code-graph): A local graph of the functions, classes and constants in your repo. It records each identifier on your machine. The renaming happens in the proxy.
+- [Full documentation text](https://www.pretense.ai/llms-full.txt): The text of every documentation page in one file, generated from the rendered pages.
 
 ## Product
 
@@ -39,6 +40,12 @@
 Install the CLI with:
 
     curl -fsSL https://www.pretense.ai/install.sh | sh
+
+## Uninstall
+
+Remove the CLI with:
+
+    curl -fsSL https://www.pretense.ai/uninstall.sh | sh
 
 ## Optional
 
