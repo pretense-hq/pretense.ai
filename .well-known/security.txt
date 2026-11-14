@@ -1,5 +1,5 @@
 Contact: mailto:security@pretense.ai
-Expires: 2027-11-14T03:33:17.000Z
+Expires: 2027-11-14T12:38:24.000Z
 Preferred-Languages: en
 Policy: https://www.pretense.ai/security
 Canonical: https://www.pretense.ai/.well-known/security.txt
