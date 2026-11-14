@@ -7,6 +7,7 @@
 ## Documentation
 
 - [Quickstart](https://www.pretense.ai/docs/quickstart): Install Pretense and route your first AI tool through it, in 4 commands.
+- [AI coding tools](https://www.pretense.ai/docs/ai-tools): Send Claude Code, Gemini CLI and Codex through Pretense in 4 commands. Secrets and PII leave as stand-in tokens. Your code comes back as you wrote it.
 - [How it works](https://www.pretense.ai/docs/how-it-works): Why Pretense mutates secrets rather than redacting them. Code names are restored byte-exactly in the reply. Secrets and PII stay as tokens.
 - [Configuration](https://www.pretense.ai/docs/config): 1 file and a handful of environment variables. Everything has a working default.
 - [CLI reference](https://www.pretense.ai/docs/cli): Every command the shipped binary accepts and what it returns.
