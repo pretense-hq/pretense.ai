@@ -1,14 +1,12 @@
 # Pretense
 
 > Real code protection for AI coding tools. Pretense sits between source code and
-> the AI tools that read it, so secrets, SSNs, phone numbers and card numbers
-> are always mutated before any request reaches a third-party model. Email
-> addresses are mutated under every framework profile except PCI.
+> the AI tools that read it, so secrets, SSNs and card numbers are always mutated before any request reaches a third-party model. Email addresses and phone numbers are mutated under every framework profile except PCI, and anywhere they are labeled.
 
 ## Documentation
 
 - [Quickstart](https://www.pretense.ai/docs/quickstart): Install Pretense and route your first AI tool through it, in 4 commands.
-- [AI coding tools](https://www.pretense.ai/docs/ai-tools): Guard AI CLIs. Secrets, SSNs, phone numbers and card numbers are always mutated. Email addresses are mutated under every framework profile except PCI.
+- [AI coding tools](https://www.pretense.ai/docs/ai-tools): Guard AI CLIs. Secrets, SSNs and card numbers are always mutated. Email and phone numbers are mutated when labeled and under every framework profile except PCI.
 - [How it works](https://www.pretense.ai/docs/how-it-works): Why Pretense mutates secrets rather than redacting them. Code names are restored byte-exactly in the reply. Secrets and PII stay as tokens.
 - [Configuration](https://www.pretense.ai/docs/config): 1 file and a handful of environment variables. Everything has a working default.
 - [CLI reference](https://www.pretense.ai/docs/cli): Every command the shipped binary accepts and what it returns.
@@ -30,8 +28,8 @@
 
 ## Key facts
 
-- Secrets, SSNs, phone numbers and card numbers are always mutated. Email addresses are mutated under every framework profile except PCI (SOC 2, HIPAA, GDPR, ISO 27001, CMMC L2, NIST). Mutated secrets and PII are never put back into the model's reply, so a model cannot echo them into a link or output.
-- To mutate email addresses, run pretense start --framework <profile>. Without a profile, or under pci, email addresses leave the machine as written.
+- Secrets, SSNs and card numbers are always mutated. Email addresses and phone numbers are mutated under every framework profile except PCI (SOC 2, HIPAA, GDPR, ISO 27001, CMMC L2, NIST), and anywhere they are labeled. Mutated secrets and PII are never put back into the model's reply, so a model cannot echo them into a link or output.
+- To mutate unlabeled email addresses and phone numbers, run pretense start --framework <profile> with any profile except PCI. Without a profile, or under PCI, unlabeled email addresses and phone numbers leave the machine as written.
 - Code identifiers are renamed on the way out and restored byte-exactly in the reply.
 - The CLI wraps Claude Code, Cursor, Codex, Gemini and Aider: pretense run <tool>.
 - Pretense is not SOC 2 or HIPAA certified today.
