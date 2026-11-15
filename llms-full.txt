@@ -127,11 +127,11 @@ URL: https://www.pretense.ai/docs/ai-tools
 
 ## AI coding tools
 
-Run AI CLIs through Pretense. Secrets, SSNs, phone numbers and card numbers are always mutated. Email addresses are mutated under a framework profile.
+Guard AI CLIs. Secrets, SSNs, phone numbers and card numbers are always mutated. Email addresses are mutated under every framework profile except PCI.
 
 ### How do I use Pretense with Claude Code, Gemini CLI and Codex?
 
-Install Pretense, sign in, and start the always-on proxy. Your AI command-line tools then send every prompt through Pretense on your machine. Secrets, SSNs, phone numbers and card numbers always leave as stand-in tokens, email addresses do under a framework profile, and your code comes back exactly as you wrote it.
+Install Pretense, sign in, and start the always-on proxy. Your AI command-line tools then send their prompts through Pretense on your machine. Detected secrets, SSNs, phone numbers and card numbers always leave as stand-in tokens, email addresses do under every framework profile except PCI, and your code comes back exactly as you wrote it.
 
 ### 4 commands
 
@@ -144,8 +144,8 @@ To install without npm, run curl -fsSL https://www.pretense.ai/install.sh | sh.
 
 - Install. Use npm (Node 18 or later) or the curl installer.
 - Sign in. pretense login opens the sign-in page. To sign in from a script, use pretense login --api-key <key>.
-- Start. pretense start --install keeps the proxy running at login and points your shell at it. Open a new terminal afterwards. To mutate email addresses as well, add a framework profile: run pretense run claude --framework <profile>.
-- Check. pretense status checks protection with a canary secret and prints protection=on. To check a proxy that was started with a profile, run pretense status --framework <profile> with the same profile.
+- Start. pretense start --install keeps the proxy running at login and points your shell at it. Open a new terminal afterwards. To mutate email addresses as well, add a framework profile other than PCI: run pretense run claude --framework <profile>.
+- Check. pretense status checks protection with a canary secret and prints protection=on. To check a proxy that was started with a profile, run pretense status --framework <profile> with the same profile. It checks the proxy in the pid record and the routing of the terminal it runs in. A separate proxy that pretense run starts for a different policy is left unchecked.
 
 ### Which tools are covered
 
@@ -159,7 +159,7 @@ Cursor built-in models, Claude desktop, Codex with ChatGPT sign-in, Gemini with 
 ### What leaves your machine
 
 - Secrets, SSNs, phone numbers and card numbers: they are always mutated into stand-in tokens before the request goes out. They stay tokens in the reply, by design.
-- Email addresses: Pretense mutates email addresses under a framework profile (`pretense run claude --framework <profile>`). Without a profile, email addresses leave your machine as written.
+- Email addresses: Pretense mutates email addresses under every framework profile except PCI (`pretense run claude --framework <profile>`). Without a profile, or under PCI, email addresses leave your machine as written.
 - Code identifiers: they are swapped on the way out and come back byte-exact in code. An identifier the model writes into prose or a comment can stay as a stand-in.
 - The rest of the prompt: it goes to the provider you chose.
 - Usage counts: they go to your Pretense dashboard.
@@ -212,7 +212,7 @@ Why Pretense mutates secrets rather than redacting them. Code names are restored
 
 Redaction destroys. A redacted secret is gone for good, so the model sees a hole where your code was and the answer degrades with it.
 
-Pretense always swaps each secret, SSN, phone number and card number for a deterministic synthetic before the request leaves your machine, and swaps email addresses the same way under a framework profile (start the proxy with pretense start --framework <profile>). It also renames the code names inside fenced code blocks the same way. What reaches the provider is the synthetic. On the way back the code names are restored byte for byte, so what reaches you reads as your own code. Secrets and PII are never put back into the reply: they stay synthetics, because a reply that echoed one could carry your real key into a link an attacker chose.
+Pretense always swaps each secret, SSN, phone number and card number for a deterministic synthetic before the request leaves your machine, and swaps email addresses the same way under every framework profile except PCI (start the proxy with pretense start --framework <profile>). It also renames the code names inside fenced code blocks the same way. What reaches the provider is the synthetic. On the way back the code names are restored byte for byte, so what reaches you reads as your own code. Secrets and PII are never put back into the reply: they stay synthetics, because a reply that echoed one could carry your real key into a link an attacker chose.
 
 your code   ──▶  mutate  ──▶  provider sees synthetics
                    │
@@ -238,11 +238,11 @@ The same engine runs over a single file through mutate and reverse. Both take fl
 Kind | Example | Action
 API keys and tokens | sk-…, AKIA…, ghp_… | Swapped, stays a token in the reply
 SSNs, phone and card numbers | SSN, phone, card | Swapped, stays a token in the reply
-Email addresses | email | Email is swapped under a framework profile, stays a token in the reply
+Email addresses | email | Email is swapped under every framework profile except PCI, stays a token in the reply
 Identifiers | variables, functions, classes | Renamed in fenced code, restored in the reply
 Comments and strings | // comments, string literals | Preserved verbatim
 
-Through the proxy, Pretense always swaps secrets, SSNs, phone numbers and card numbers, swaps email addresses under a framework profile, and also renames the function, class and variable names inside fenced code blocks, so the provider sees neither your credentials nor your real symbol names. Each name gets the same synthetic everywhere in the request, which keeps the structure of your code intact for the model. Text outside a fence keeps its names as written; only its secrets, SSNs, phone numbers and card numbers are swapped, and email addresses under a framework profile.
+Through the proxy, Pretense always swaps secrets, SSNs, phone numbers and card numbers, swaps email addresses under every framework profile except PCI, and also renames the function, class and variable names inside fenced code blocks, so the provider sees neither your credentials nor your real symbol names. Each name gets the same synthetic everywhere in the request, which keeps the structure of your code intact for the model. Text outside a fence keeps its names as written; only its secrets, SSNs, phone numbers and card numbers are swapped, and email addresses under every framework profile except PCI.
 
 Two paths keep names as written by design. A local runner you declare under air-gap sees real names, because the default air-gap policy, secrets-pii-only, skips the rename for that runner alone. The file-level mutate command swaps secret values only. What init records is a code graph of those names, not a rename of them.
 
