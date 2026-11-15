@@ -160,7 +160,7 @@ Cursor built-in models, Claude desktop, Codex with ChatGPT sign-in, Gemini with 
 
 - Secrets, SSNs and card numbers: they are always mutated into stand-in tokens before the request goes out. They stay tokens in the reply, by design.
 - Email addresses and phone numbers: Pretense mutates email addresses and phone numbers under every framework profile except PCI (`pretense run claude --framework <profile>`) and anywhere they are labeled. Without a profile, or under PCI, unlabeled email addresses and phone numbers leave your machine as written.
-- Code identifiers: they are swapped on the way out and come back byte-exact in code. An identifier the model writes into prose or a comment can stay as a stand-in.
+- Code identifiers: they are swapped on the way out and come back byte-exact in the reply. An identifier inside the model's thinking block stays a stand-in, because that signed block passes through unchanged.
 - The rest of the prompt: it goes to the provider you chose.
 - Usage counts: they go to your Pretense dashboard.
 
@@ -206,7 +206,7 @@ URL: https://www.pretense.ai/docs/how-it-works
 
 ## How it works
 
-Why Pretense mutates secrets rather than redacting them. Code names are restored byte-exactly in the reply. Secrets and PII stay as tokens.
+How it works: Secrets, SSNs and card numbers are always mutated. Email and phone numbers are mutated when labeled and under every framework profile except PCI.
 
 ### Mutation over redaction
 
@@ -291,7 +291,7 @@ ignore:
 customPatterns: []
 verbose: false
 
-scan sets what each class of finding does. proxy.port is the port the proxy prefers. ignore is glob-matched against paths. Under the default proprietary: mutate, code identifiers are renamed on the way out and restored byte-exactly in the reply.
+scan sets what each class of finding does. proxy.port is the port the proxy prefers. ignore is glob-matched against paths. Under the default proprietary: mutate, code identifiers are renamed on the way out and restored byte-exactly in the reply. An identifier inside the model’s thinking block stays a stand-in, because that signed block passes through unchanged.
 
 redact is a swap, not a deletionAt egress a redact action is a swap, like mutate: the value is replaced with a synthetic stand-in. Unlike a renamed identifier, a secret or PII stand-in is never swapped back into the reply. The name is historical. Nothing is deleted, and the plaintext is never forwarded. reject is the one that refuses instead, failing closed with an HTTP 400.
 
