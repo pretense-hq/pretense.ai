@@ -1,5 +1,5 @@
 Contact: mailto:jimmy@pretense.ai
-Expires: 2027-11-17T18:20:19.000Z
+Expires: 2027-11-17T18:46:08.000Z
 Preferred-Languages: en
 Policy: https://www.pretense.ai/security
 Canonical: https://www.pretense.ai/.well-known/security.txt
