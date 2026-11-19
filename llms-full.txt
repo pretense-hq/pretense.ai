@@ -111,9 +111,15 @@ Pretense starts the proxy for yourun starts one and stops the one it started. Th
 - Air-gap: keep the model on your own hardware
 - Automation & CI: catch secrets before they are committed
 
-Prefer a Node-free install? Use this instead.
+On macOS, Linux or WSL without npm, run the curl installer. It uses npm when Node is present and installs the standalone binary when Node is absent.
 
 curl -fsSL https://www.pretense.ai/install.sh | sh
+
+On Windows, run this in PowerShell.
+
+irm https://www.pretense.ai/install.ps1 | iex
+
+The standalone binary can trail the npm release: the one served to installs without Node is 0.6.79 as of Nov 19, 2026, before pretense start --install shipped in 0.6.89. Node is the recommended path. Run pretense --version after any install to confirm what landed.
 
 To move to a newer version, run the install command again.
 
@@ -388,6 +394,49 @@ upgrade | Compare plans and change your subscription
 
 There is no self-update commandupgrade is about your subscription, not your binary. To move to a newer version, run the install command from the Quickstart again.
 
+### pretense start
+
+pretense start runs the Pretense proxy on your machine. It filters the traffic of AI tools that you route to it with a base URL: ANTHROPIC_BASE_URL and GOOGLE_GEMINI_BASE_URL point at http://127.0.0.1:9339, and OPENAI_BASE_URL and OPENAI_API_BASE point at http://127.0.0.1:9339/v1. A tool that reads one of those variables sends its prompts through the proxy, where detected secrets, SSNs and card numbers become stand-in tokens before the request leaves.
+
+Scope: AI tool traffic that reaches the local proxyPretense is a local proxy that your tools reach through a base URL. It works on the requests those tools send to it, and it leaves the rest of the device alone: it keeps whole-device traffic out of scope, installs no root certificate and never intercepts TLS. See Trust.
+
+#### Set it up once
+
+pretense start --install
+pretense status
+
+--install keeps the proxy running at login and points your shell at it. Open a new terminal afterwards. status prints protection=on when the canary secret was mutated on its way out.
+
+#### Options
+
+Command | What it does
+pretense start | Run the proxy in this terminal on port 9339. Add -p <port> for another port or --strict-port to refuse a busy one
+pretense start --install | Register a user-level service that starts the proxy at login, and point every tool at it (0.6.89+)
+pretense start --uninstall | Remove that service and restore the routing it wrote (0.6.89+)
+pretense start --shell-setup | Write the export block into your shell rc file between pretense markers. Add --remove to undo (0.6.89+)
+pretense start --env [shell] | Print the export lines for zsh, bash, fish or powershell, and change nothing (0.6.89+)
+pretense start --framework <ids> | Add framework profiles to this proxy's detector sets: hipaa, gdpr, soc2, nist, iso27001, cmmc, pci
+pretense status | Check protection with a canary secret and print protection=on (0.7.0+)
+
+To see the export lines without changing anything, print them.
+
+pretense start --env
+pretense start --env powershell
+
+To undo both the service and the shell block, run these 2 commands.
+
+pretense start --uninstall
+pretense start --shell-setup --remove
+
+#### By operating system
+
+OS | What --install registers | Behavior
+macOS | A LaunchAgent, ai.pretense.proxy, in ~/Library/LaunchAgents | Starts at login and restarts after a crash
+Linux | A systemd user unit, pretense-proxy.service, in ~/.config/systemd/user | Starts at login and restarts after a crash. Needs a systemd user session; elsewhere, run pretense start in a terminal and add --shell-setup
+Windows | A Task Scheduler task, PretenseDaemon | Starts at login and restarts up to 3 times, 1 minute apart, after a failure. For the shell block, run pretense start --env powershell or --shell-setup from PowerShell
+
+Every OS uses the same port, 9339, and the same base URLs. AI coding tools lists the tools tested against them.
+
 ### Flags
 
 Flags belong to the command they follow. These are the ones you will reach for.
@@ -545,12 +594,15 @@ The exit codes this gate acts on are in the CLI reference.
 A hook is optional for a developer. The pipeline runs every time.
 
 - name: Pretense
+  env:
+    PRETENSE_API_KEY: ${{ secrets.PRETENSE_API_KEY }}
   run:
     npm i -g @pretense/cli@stable
-    pretense login --key ${{ secrets.PRETENSE_KEY }}
     pretense scan .
 
-Those first 2 steps are the install and login from the Quickstart.
+The first step is the install from the Quickstart. The key travels as the PRETENSE_API_KEY environment variable from your GitHub Actions secrets, so the job has no login step. The next release, 0.7.2 (not on npm yet; the current release is 0.7.1), will refuse pretense login while api.pretense.ai is unreachable. The environment variable keeps the pipeline independent of that call on every version.
+
+Name the GitHub Actions secret PRETENSE_API_KEY. A secret saved earlier as PRETENSE_KEY needs the new name.
 
 Keep that last line as written (scan ci covers tracked files only)pretense scan ci only inspects git-tracked content. An untracked file is invisible to it, so in a working tree that still has one it reports nothing and exits 0 while those secrets sit on disk. pretense scan . walks the working tree and does not have that hole. The 2 forms also report findings with different exit codes, which the CLI reference lists.
 

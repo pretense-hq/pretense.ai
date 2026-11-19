@@ -37,9 +37,17 @@
 
 ## Install
 
-Install the CLI with:
+Install the CLI with npm (Node 20 or later):
+
+    npm i -g @pretense/cli
+
+On macOS, Linux or WSL, the curl installer uses npm when Node is present:
 
     curl -fsSL https://www.pretense.ai/install.sh | sh
+
+On Windows, run this in PowerShell:
+
+    irm https://www.pretense.ai/install.ps1 | iex
 
 ## Uninstall
 
