@@ -252,6 +252,9 @@ function Test-PretenseBinaryFloor {
 function Invoke-PretenseInstall {
   $BaseUrl    = "https://www.pretense.ai"
   $ReleasesUrl = "https://app.pretense.ai"  # binaries are served by the app origin, not the public Pages repo
+  # www is a static export: it serves latest/version.txt and SHA256SUMS but NO binaries. Binaries are served
+  # by app.pretense.ai; the checksum manifest still comes from $BaseUrl and every download is still verified.
+  $BinaryBaseUrl = if ($BaseUrl -eq "https://www.pretense.ai") { "https://app.pretense.ai" } else { $BaseUrl }
   # Must match the published artifact filename exactly or the download 404s.
   # As of v0.6.1 the release workflow emits pretense-*; older 0.4.x artifacts
   # were named pretest-* and have been removed.
@@ -286,7 +289,7 @@ function Invoke-PretenseInstall {
 
   # Download binary
   $FileName   = $RemoteBinaryName
-  $DownloadUrl = "$ReleasesUrl/releases/$Version/$FileName"
+  $DownloadUrl = "$BinaryBaseUrl/releases/$Version/$FileName"
   $TmpFile    = [System.IO.Path]::GetTempFileName() + ".exe"
 
   Write-Host "  -> Downloading $FileName $Version..."

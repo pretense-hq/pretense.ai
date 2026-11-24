@@ -50,6 +50,14 @@ set -e
 BASE_URL="https://www.pretense.ai"
 # Release binaries stay off the public Pages repo; they are served by the app origin.
 RELEASES_URL="https://app.pretense.ai"
+# www is a static export (GitHub Pages): it serves latest/version.txt and SHA256SUMS but NO binaries
+# (0.7.2, 0.7.3 and 0.7.4 binaries 404 there). Binaries are served by app.pretense.ai. The checksum
+# manifest still comes from BASE_URL and every download is still verified against it. A BASE_URL that
+# is not the production www (a test stub, a mirror) serves everything itself.
+case "$BASE_URL" in
+  "https://www.pretense.ai") BINARY_BASE_URL="https://app.pretense.ai" ;;
+  *) BINARY_BASE_URL="$BASE_URL" ;;
+esac
 # Must match the published artifact filenames exactly or every download 404s.
 # As of v0.6.1 the release workflow emits `pretense-*`; older 0.4.x artifacts
 # were named `pretest-*` and have been removed.
@@ -476,7 +484,7 @@ main() {
     windows) BINARY_FILE="${REMOTE_BINARY_NAME}-win-${ARCH}.exe" ;;
     *)       BINARY_FILE="${REMOTE_BINARY_NAME}-${OS}-${ARCH}" ;;
   esac
-  DOWNLOAD_URL="${RELEASES_URL}/releases/${VERSION}/${BINARY_FILE}"
+  DOWNLOAD_URL="${BINARY_BASE_URL}/releases/${VERSION}/${BINARY_FILE}"
   CHECKSUM_URL="${BASE_URL}/releases/${VERSION}/SHA256SUMS"
 
   # Download binary
